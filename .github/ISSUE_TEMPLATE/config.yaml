@@ -1,0 +1,11 @@
+# Disables the option to open a blank, unstructured issue
+blank_issues_enabled: false
+
+# Optional: Add external links to the issue chooser page
+contact_links:
+  - name: 💬 Community Discussions
+    url: https://github.com/AhmadAbukhuit/ecommerce-insights-api.git
+    about: Ask questions, get help with the code, or discuss concepts here!
+  - name: 📖 Python Official Documentation
+    url: https://docs.python.org/3/
+    about: Need to look up a built-in function or rule? Check the official docs first.

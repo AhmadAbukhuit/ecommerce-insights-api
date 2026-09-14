@@ -1,0 +1,13 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+    volumes:
+      - ./app:/app
+    # Overrides the Dockerfile CMD with the reload flag for active development
+    command: sh -c "python generate_data.py && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
