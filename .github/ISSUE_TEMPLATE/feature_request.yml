@@ -1,0 +1,54 @@
+name: ✨ New Feature / New API
+description: Suggest a new API endpoint, analytics calculation, or feature.
+title: "[Feature]: "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for a new API endpoint or analytics metric? Suggest it here!
+  - type: textarea
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: A concise description of the new endpoint or capability.
+      placeholder: e.g., Add a `/metrics/timeseries` endpoint to provide daily revenue trends.
+    validations:
+      required: true
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use Case & Business Value
+      description: Why is this feature needed and who would use it?
+      placeholder: e.g., Allows frontend dashboards to plot historical revenue trends over time.
+    validations:
+      required: true
+  - type: textarea
+    id: api_contract
+    attributes:
+      label: Proposed API Contract (Optional)
+      description: If proposing a new API endpoint, outline the HTTP method, URL path, parameters, and sample JSON response.
+      placeholder: |
+        Method: GET
+        Path: /metrics/timeseries
+        Query Parameters: ?start_date=2026-01-01&end_date=2026-01-31
+        Response:
+        {
+          "2026-01-01": {"orders": 12, "revenue": 1450.50},
+          "2026-01-02": {"orders": 8, "revenue": 980.00}
+        }
+      render: yaml
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or workarounds you have considered.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to ensure this feature hasn't already been suggested.
+          required: true
+        - label: I am willing to contribute code to implement this feature.
+          required: false

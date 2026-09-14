@@ -1,0 +1,161 @@
+name: Bandit Security Scan
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  bandit:
+    name: Bandit Scan & Issue Management
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Bandit
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit
+
+      - name: Run Bandit Scan
+        id: run_bandit
+        run: |
+          mkdir -p reports
+          set +e
+          bandit -r app -f txt -o reports/bandit_report.txt
+          BANDIT_EXIT=$?
+          set -e
+          cat reports/bandit_report.txt
+          echo "exit_code=$BANDIT_EXIT" >> $GITHUB_OUTPUT
+
+      - name: Manage GitHub Issues based on Scan Results
+        if: always() && steps.run_bandit.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BANDIT_EXIT_CODE: ${{ steps.run_bandit.outputs.exit_code }}
+          COMMIT_SHA: ${{ github.sha }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          RUN_ID: ${{ github.run_id }}
+          REPO: ${{ github.repository }}
+        run: |
+          python - << 'EOF'
+          import os
+          import subprocess
+          import sys
+
+          exit_code = os.getenv("BANDIT_EXIT_CODE", "0")
+          commit_sha = os.getenv("COMMIT_SHA", "")
+          ref_name = os.getenv("REF_NAME", "")
+          event_name = os.getenv("EVENT_NAME", "")
+          actor = os.getenv("ACTOR", "")
+          run_id = os.getenv("RUN_ID", "")
+          repo = os.getenv("REPO", "")
+
+          report_path = "reports/bandit_report.txt"
+          report_content = ""
+          if os.path.exists(report_path):
+              with open(report_path, "r", encoding="utf-8", errors="replace") as f:
+                  report_content = f.read().strip()
+
+          issue_title = "[Security] Bandit Scan Findings"
+
+          def run_gh(cmd_list):
+              try:
+                  res = subprocess.run(["gh"] + cmd_list, capture_output=True, text=True, check=True)
+                  return res.stdout.strip()
+              except subprocess.CalledProcessError as e:
+                  print(f"GH CLI warning/error: {e.stderr.strip() if e.stderr else e}")
+                  return None
+
+          # Search for existing open issue with this title
+          find_cmd = [
+              "issue", "list",
+              "--state", "open",
+              "--search", f"{issue_title} in:title",
+              "--json", "number",
+              "--jq", ".[0].number"
+          ]
+          existing_issue = run_gh(find_cmd)
+
+          if exit_code != "0":
+              print("Bandit detected potential security issues.")
+              run_url = f"https://github.com/{repo}/actions/runs/{run_id}"
+
+              # Ensure labels exist (ignore errors if permissions/already exists)
+              subprocess.run(["gh", "label", "create", "security", "--color", "ee0701"], capture_output=True)
+              subprocess.run(["gh", "label", "create", "bandit", "--color", "d73a4a"], capture_output=True)
+
+              if existing_issue and existing_issue != "null":
+                  print(f"Open issue #{existing_issue} already exists. Adding a comment with latest findings...")
+                  comment_body = (
+                      f"### 🔄 Bandit Scan Update\n\n"
+                      f"Security findings were detected during workflow run for commit `{commit_sha}` "
+                      f"(`{event_name}` on `{ref_name}` by @{actor}).\n\n"
+                      f"<details open>\n<summary><b>Latest Scan Report</b></summary>\n\n"
+                      f"```text\n{report_content}\n```\n\n"
+                      f"</details>\n\n"
+                      f"---\n*Action Run: [{run_id}]({run_url})*"
+                  )
+                  with open("comment.md", "w", encoding="utf-8") as f:
+                      f.write(comment_body)
+                  run_gh(["issue", "comment", existing_issue, "--body-file", "comment.md"])
+              else:
+                  print("No open issue found. Creating a new issue...")
+                  issue_body = (
+                      f"## ⚠️ Bandit Security Findings Detected\n\n"
+                      f"A security scan executed by the **Bandit** workflow detected potential vulnerabilities in the codebase.\n\n"
+                      f"- **Trigger:** `{event_name}`\n"
+                      f"- **Branch/Ref:** `{ref_name}`\n"
+                      f"- **Commit:** `{commit_sha}`\n"
+                      f"- **Triggered by:** @{actor}\n\n"
+                      f"### Scan Report\n\n"
+                      f"<details open>\n<summary><b>Bandit Output</b></summary>\n\n"
+                      f"```text\n{report_content}\n```\n\n"
+                      f"</details>\n\n"
+                      f"---\n"
+                      f"*Automatically generated by [Bandit Scan Workflow]({run_url}).*"
+                  )
+                  with open("new_issue.md", "w", encoding="utf-8") as f:
+                      f.write(issue_body)
+
+                  create_res = run_gh([
+                      "issue", "create",
+                      "--title", issue_title,
+                      "--body-file", "new_issue.md",
+                      "--label", "security,bandit"
+                  ])
+                  if not create_res:
+                      run_gh([
+                          "issue", "create",
+                          "--title", issue_title,
+                          "--body-file", "new_issue.md"
+                      ])
+
+              # Fail the workflow step so CI indicates security checks failed
+              sys.exit(1)
+          else:
+              print("Bandit scan passed with no issues.")
+              if existing_issue and existing_issue != "null":
+                  print(f"Closing resolved issue #{existing_issue}...")
+                  resolve_msg = (
+                      f"✅ **Resolved:** Bandit security scan passed with no issues detected as of commit `{commit_sha}`. "
+                      f"Closing this issue automatically."
+                  )
+                  run_gh(["issue", "comment", existing_issue, "--body", resolve_msg])
+                  run_gh(["issue", "close", existing_issue, "--reason", "completed"])
+              else:
+                  print("No existing open issue found to close.")
+          EOF

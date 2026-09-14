@@ -1,8 +1,14 @@
-# Default markdownlint configuration
+# markdownlint configuration
+# Documentation: https://github.com/DavidAnson/markdownlint
+
 default: true
 
-# Disable the line-length limit (MD013)
-MD007: false
+# MD013/line-length: Allow long lines (tables, URLs, badges)
 MD013: false
+
+# MD033/no-inline-html: Allow inline HTML elements (e.g., badges, details)
 MD033: false
-MD036: false
+
+# MD024/no-duplicate-heading: Allow duplicate headings if under different parent headings
+MD024:
+  siblings_only: true

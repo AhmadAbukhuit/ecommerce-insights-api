@@ -1,0 +1,55 @@
+name: ⚡ Code / API Enhancement
+description: Propose an improvement or update to existing endpoints, services, or code.
+title: "[Enhancement]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to suggest performance optimizations, endpoint improvements, refactoring, or schema updates for existing features.
+  - type: textarea
+    id: target
+    attributes:
+      label: Target Component / Endpoint
+      description: Which endpoint, file, or service would this enhancement modify?
+      placeholder: e.g., `/metrics/category` endpoint, `load_data()` in `services.py`, Docker configuration
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Problem / Motivation
+      description: What is the current behavior or limitation, and why should it be improved?
+      placeholder: Describe the motivation behind this enhancement...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution / Changes
+      description: Describe the changes you would like to see implemented.
+      placeholder: |
+        - Modify endpoint response to include...
+        - Optimize Pandas aggregation by...
+    validations:
+      required: true
+  - type: dropdown
+    id: breaking_changes
+    attributes:
+      label: Breaking Changes
+      description: Does this update modify existing response schemas or parameters?
+      options:
+        - "No - Fully backwards compatible"
+        - "Yes - Modifies existing response format or query params"
+        - "Unsure"
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate.
+          required: true
+        - label: I am willing to submit a Pull Request to implement this enhancement.
+          required: false
