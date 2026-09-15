@@ -12,7 +12,6 @@ Please take a few moments to review this guide before getting started.
 - [How Can I Contribute?](#how-can-i-contribute)
   - [Reporting Bugs](#reporting-bugs)
   - [Suggesting Features](#suggesting-features)
-  - [Submitting Pull Requests](#submitting-pull-requests)
 - [Local Development Setup](#local-development-setup)
   - [Prerequisites](#prerequisites)
   - [Step-by-Step Setup](#step-by-step-setup)
@@ -38,6 +37,7 @@ We are committed to providing a friendly, safe, and welcoming environment for al
 Before reporting a bug, please check existing issues to ensure it hasn't already been reported.
 
 When creating a bug report, please include:
+
 - A clear, descriptive title.
 - Steps to reproduce the behavior.
 - Expected vs. actual behavior.
@@ -50,6 +50,7 @@ When creating a bug report, please include:
 ### Suggesting Features
 
 We welcome ideas for new analytical metrics, API endpoints, performance optimizations, or Docker improvements!
+
 - Open an issue describing the proposed feature and why it would be beneficial.
 - Outline potential implementation details or API contract designs if applicable.
 
@@ -66,12 +67,14 @@ We welcome ideas for new analytical metrics, API endpoints, performance optimiza
 ### Step-by-Step Setup
 
 1. **Fork and clone the repository:**
+
    ```bash
    git clone https://github.com/<your-username>/ecommerce-insights-api.git
    cd ecommerce-insights-api
    ```
 
 2. **Create and activate a virtual environment:**
+
    ```bash
    # On macOS/Linux:
    python3 -m venv .venv
@@ -83,12 +86,14 @@ We welcome ideas for new analytical metrics, API endpoints, performance optimiza
    ```
 
 3. **Install dependencies:**
+
    ```bash
    pip install -r requirements.txt
    pip install ruff pytest
    ```
 
 4. **Generate the mock dataset:**
+
    ```bash
    cd app
    python generate_data.py
@@ -96,9 +101,11 @@ We welcome ideas for new analytical metrics, API endpoints, performance optimiza
    ```
 
 5. **Start the development server:**
+
    ```bash
    uvicorn app.main:app --reload --port 8000
    ```
+
    Open [http://localhost:8000/docs](http://localhost:8000/docs) in your browser to explore the interactive Swagger documentation.
 
 ### Running with Docker
